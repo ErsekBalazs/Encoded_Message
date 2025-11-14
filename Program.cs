@@ -3,17 +3,39 @@
 
 while (true)
 {
-    Console.Write("Please write a message: ");
-    string? message = Console.ReadLine();
-    Console.Write("Please write a key (at least as long as the message): ");
-    string? key = Console.ReadLine();
-    if (message is null || key is null)
-        continue;
-    else if (!ValidityCheck(message) || !ValidityCheck(key))
-        continue;
+    Console.Write("Code or decode?: ");
+    string? choice = Console.ReadLine();
+    
+    if(choice == "code")
+    {
+        Console.Write("Please write a message: ");
+        string? message = Console.ReadLine();
+        Console.Write("Please write a key (at least as long as the message): ");
+        string? key = Console.ReadLine();
+        if (message is null || key is null)
+            continue;
+        else if (!ValidityCheck(message) || !ValidityCheck(key))
+            continue;
 
-    string encoded = Encoder(message, key);
-    Console.WriteLine(encoded);
+        string encoded = Encoder(message, key);
+        Console.WriteLine($"Coded message: {encoded}");
+    }
+    else if (choice == "decode")
+    {
+        Console.Write("Coded message: ");
+        string? coded = Console.ReadLine();
+        Console.Write("Key: ");
+        string? key = Console.ReadLine();
+        if (coded is null || key is null)
+            continue;
+        else if (!ValidityCheck(coded) || !ValidityCheck(key))
+            continue;
+
+        string decoded = Decoder(coded, key);
+        Console.WriteLine($"Decoded message: {decoded}");
+    }
+    else 
+        continue;
 }
 
 bool ValidityCheck(string text)
@@ -40,11 +62,24 @@ string Encoder(string message, string key)
 
     for (int i = 0; i < message.Length; i++)
     {
-        int charIndex = (validCharacters.IndexOf(message[i]) + validCharacters.IndexOf(key[i])) % 26;
+        int charIndex = (validCharacters.IndexOf(message[i]) + validCharacters.IndexOf(key[i])) % 27;
         encodedCharacters.Add(validCharacters[charIndex]);
     }
     string? encodedMessage = new string(encodedCharacters.ToArray());
     return encodedMessage == null ? string.Empty : encodedMessage;
+}
+
+string Decoder(string encodedMessage,  string key)
+{
+    List<char> decodedCharacters = new List<char>();
+
+    for (int i = 0; i < encodedMessage.Length; i++)
+    {
+        int charIndex = (validCharacters.IndexOf(encodedMessage[i]) - validCharacters.IndexOf(key[i]) + 27) % 27;
+        decodedCharacters.Add(validCharacters[charIndex]);
+    }
+    string? decodedMessage = new string(decodedCharacters.ToArray());
+    return decodedMessage == null ? string.Empty : decodedMessage;
 }
 
 
