@@ -1,41 +1,49 @@
 ﻿List<char> validCharacters = new List<char> { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
     'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ' };
 
-while (true)
+List<string> words = File.ReadAllLines("words.txt").ToList();
+
+foreach (var word in words)
+    Console.WriteLine(word);
+
+void EncoderDecoderUI()
 {
-    Console.Write("Code or decode?: ");
-    string? choice = Console.ReadLine();
-    
-    if(choice == "code")
+    while (true)
     {
-        Console.Write("Please write a message: ");
-        string? message = Console.ReadLine();
-        Console.Write("Please write a key (at least as long as the message): ");
-        string? key = Console.ReadLine();
-        if (message is null || key is null)
-            continue;
-        else if (!ValidityCheck(message) || !ValidityCheck(key))
-            continue;
+        Console.Write("Code or decode?: ");
+        string? choice = Console.ReadLine();
 
-        string encoded = Encoder(message, key);
-        Console.WriteLine($"Coded message: {encoded}");
-    }
-    else if (choice == "decode")
-    {
-        Console.Write("Coded message: ");
-        string? coded = Console.ReadLine();
-        Console.Write("Key: ");
-        string? key = Console.ReadLine();
-        if (coded is null || key is null)
-            continue;
-        else if (!ValidityCheck(coded) || !ValidityCheck(key))
-            continue;
+        if (choice == "code")
+        {
+            Console.Write("Please write a message: ");
+            string? message = Console.ReadLine();
+            Console.Write("Please write a key (at least as long as the message): ");
+            string? key = Console.ReadLine();
+            if (message is null || key is null)
+                continue;
+            else if (!ValidityCheck(message) || !ValidityCheck(key))
+                continue;
 
-        string decoded = Decoder(coded, key);
-        Console.WriteLine($"Decoded message: {decoded}");
+            string encoded = Encoder(message, key);
+            Console.WriteLine($"Coded message: {encoded}");
+        }
+        else if (choice == "decode")
+        {
+            Console.Write("Coded message: ");
+            string? coded = Console.ReadLine();
+            Console.Write("Key: ");
+            string? key = Console.ReadLine();
+            if (coded is null || key is null)
+                continue;
+            else if (!ValidityCheck(coded) || !ValidityCheck(key))
+                continue;
+
+            string decoded = Decoder(coded, key);
+            Console.WriteLine($"Decoded message: {decoded}");
+        }
+        else
+            continue;
     }
-    else 
-        continue;
 }
 
 bool ValidityCheck(string text)
@@ -81,7 +89,6 @@ string Decoder(string encodedMessage,  string key)
     string? decodedMessage = new string(decodedCharacters.ToArray());
     return decodedMessage == null ? string.Empty : decodedMessage;
 }
-
 
 
 
