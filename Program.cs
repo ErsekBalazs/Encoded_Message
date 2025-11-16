@@ -3,8 +3,8 @@
 
 List<string> words = File.ReadAllLines("words.txt").ToList();
 
-foreach (var word in words)
-    Console.WriteLine(word);
+for (int i = 0; i<10; i++)
+    TestMethod();
 
 void EncoderDecoderUI()
 {
@@ -90,6 +90,26 @@ string Decoder(string encodedMessage,  string key)
     return decodedMessage == null ? string.Empty : decodedMessage;
 }
 
+// Test method to generate and return two encrypted messages from a randomly generated key 
+(string, string) TestMethod()
+{
+    string unencoded1 = "curiosity killed the cat";
+    string unencoded2 = "early bird catches the worm";
 
+    string key = string.Empty;
+    Random random = new Random();
+
+    for (int i = 0; i<= unencoded2.Length; i++) 
+        key += validCharacters[random.Next(0,validCharacters.Count)];
+
+    string encoded1 = Encoder(unencoded1, key);
+    string encoded2 = Encoder(unencoded2, key);
+
+    Console.WriteLine($"First phrase: {encoded1}");
+    Console.WriteLine($"Second phrase: {encoded2}");
+    Console.WriteLine($"Key: {key}");
+
+    return (encoded1,  encoded2);
+}
 
 
