@@ -1,10 +1,13 @@
-﻿List<char> validCharacters = new List<char> { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+﻿using System.Diagnostics.Tracing;
+
+List<char> validCharacters = new List<char> { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
     'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ' };
 
 List<string> words = File.ReadAllLines("words.txt").ToList();
 
-for (int i = 0; i<10; i++)
-    TestMethod();
+List<string> strings = PossibleMatchingWords("xdas");
+foreach (string str in strings)
+    Console.WriteLine(str);
 
 void EncoderDecoderUI()
 {
@@ -81,7 +84,9 @@ string Decoder(string encodedMessage,  string key)
 {
     List<char> decodedCharacters = new List<char>();
 
-    for (int i = 0; i < encodedMessage.Length; i++)
+    int range = Math.Min(encodedMessage.Length, key.Length);
+
+    for (int i = 0; i < range; i++)
     {
         int charIndex = (validCharacters.IndexOf(encodedMessage[i]) - validCharacters.IndexOf(key[i]) + 27) % 27;
         decodedCharacters.Add(validCharacters[charIndex]);
@@ -110,6 +115,26 @@ string Decoder(string encodedMessage,  string key)
     Console.WriteLine($"Key: {key}");
 
     return (encoded1,  encoded2);
+}
+
+List<string> PossibleMatchingWords(string wordFragment)
+{
+    List<string> possibleMatches = new List<string>();
+
+    foreach (string word in words)
+    {
+        bool match = false;
+        for (int i = 0; i < wordFragment.Length; i++)
+        {
+            if (word[i] != wordFragment[i])
+                break;
+            else if (word[i] == wordFragment[i] && i == wordFragment.Length - 1)
+                match = true;
+        }
+        if (match is true)
+            possibleMatches.Add(word);
+    }
+    return possibleMatches;
 }
 
 
