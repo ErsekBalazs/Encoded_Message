@@ -5,7 +5,9 @@ List<char> validCharacters = new List<char> { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
 
 List<string> words = File.ReadAllLines("words.txt").ToList();
 
-List<string> strings = PossibleMatchingWords("xdas");
+(string encrypted1, string encrypted2) = TestMethod();
+
+List<string> strings = KeyFinder(encrypted1, encrypted2);
 foreach (string str in strings)
     Console.WriteLine(str);
 
@@ -110,19 +112,62 @@ string Decoder(string encodedMessage,  string key)
     string encoded1 = Encoder(unencoded1, key);
     string encoded2 = Encoder(unencoded2, key);
 
-    Console.WriteLine($"First phrase: {encoded1}");
-    Console.WriteLine($"Second phrase: {encoded2}");
-    Console.WriteLine($"Key: {key}");
+    Console.WriteLine($"First phrase: {key}");
 
     return (encoded1,  encoded2);
 }
 
+List<string> KeyFinder(string encrypted1, string encrypted2)
+{ 
+    List<string> possibleKeys = new List<string>();
+
+    foreach (string word in words)
+    {
+        List<char> possibleKeyChars = new List<char>();
+        List<char> unencrypted2Chars = new List<char>();
+        List<char> unencrypted1Chars = new List<char>();
+
+        if (word.Length > encrypted1.Length)
+            continue;
+        else if (word.Length < encrypted1.Length)
+            unencrypted1Chars.AddRange(word + " ");
+        else if (word.Length == encrypted1.Length)
+            unencrypted1Chars.AddRange(word);
+
+        for (int i = 0; i < unencrypted1Chars.Count; i++)
+        {
+            if (i < possibleKeyChars.Count)
+                continue;
+            int charIndex = (validCharacters.IndexOf(encrypted1[i]) - validCharacters.IndexOf(unencrypted1Chars[i]) + 27) % 27;
+            
+            possibleKeyChars.Add(validCharacters[charIndex]);
+        }
+        string possibleKey = string.Concat(possibleKeyChars);
+
+        string unencrypted2 = Decoder(encrypted2, possibleKey);
+        string[] unencrypted2Substrings = unencrypted2.Split(' ');
+
+        List<string> possibleMatches = PossibleMatchingWords(unencrypted2Substrings[^1]);
+        if (possibleMatches.Count == 0)
+            continue;
+        else if (unencrypted1Chars.Count < encrypted1.Length || unencrypted2Chars.Count < encrypted2.Length)
+            Console.WriteLine("Calling recursive method\n");
+        else
+            possibleKeys.Add(possibleKey);
+    }
+    return possibleKeys;
+}
+
 List<string> PossibleMatchingWords(string wordFragment)
 {
+    Console.WriteLine($"Word fragment: '{wordFragment}'");
     List<string> possibleMatches = new List<string>();
 
     foreach (string word in words)
     {
+        if (word.Length < wordFragment.Length)
+            continue;
+
         bool match = false;
         for (int i = 0; i < wordFragment.Length; i++)
         {
