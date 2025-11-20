@@ -1,16 +1,19 @@
 ﻿Encrypt encrypt = new();
-string message = "hello";
-string key = "abcdefg";
-string encrypted = encrypt.Encoder(message, key);
-string unencrypted = encrypt.Decoder(encrypted, key);
+(string encrypt1, string encrypt2, string keyUsed) = encrypt.TestMethod();
+encrypt.KeyFinder(encrypt1, encrypt2);
+foreach(string key in encrypt.possibleKeys)
+    Console.WriteLine(key);
+
+Console.WriteLine(encrypt.possibleKeys.Contains(keyUsed));
+
 
 public class Encrypt
 {
     private List<char> validCharacters = new List<char> { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
              'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ' };
 
-    private List<string> words = File.ReadAllLines("words.txt").ToList();
-    private List<string> possibleKeys = new List<string>();
+    public List<string> words = File.ReadAllLines("words.txt").ToList();
+    public List<string> possibleKeys = new List<string>();
 
     bool ValidityCheck(string text)
     {
@@ -59,111 +62,193 @@ public class Encrypt
     }
 
     // Test method to generate and return two encrypted messages from a randomly generated key 
-    (string, string) TestMethod()
+    public (string, string, string) TestMethod()
     {
-        string unencoded1 = "curiosity killed the cat";
-        string unencoded2 = "early bird catches the worm";
+        string unencoded1 = "curiosity";
+        string unencoded2 = "early bird";
 
         string key = string.Empty;
         Random random = new Random();
+        int max = Math.Max(unencoded1.Length, unencoded2.Length);
 
-        for (int i = 0; i <= unencoded2.Length; i++)
+        for (int i = 0; i < max; i++)
             key += validCharacters[random.Next(0, validCharacters.Count)];
 
         string encoded1 = Encoder(unencoded1, key);
         string encoded2 = Encoder(unencoded2, key);
 
-        Console.WriteLine($"Key used: {key}");
+        Console.WriteLine($"Key used: '{key}'");
 
-        return (encoded1, encoded2);
+        return (encoded1, encoded2, key);
     }
 
     public List<string> KeyFinder(string encrypted1, string encrypted2)
     {
         foreach (string word in words)
         {
-            List<char> possibleKeyChars = new List<char>();
-            List<char> unencrypted1Chars = new List<char>();
-            List<char> unencrypted2Chars = new List<char>();
+            string possibleKey = string.Empty;
+            string unencrypted1 = string.Empty;
+            string unencrypted2 = string.Empty;
 
             if (word.Length > encrypted1.Length)
                 continue;
             else if (word.Length < encrypted1.Length)
-                unencrypted1Chars.AddRange(word + " ");
+                unencrypted1 = word + " ";
             else if (word.Length == encrypted1.Length)
-                unencrypted1Chars.AddRange(word);
+                unencrypted1 = word;
 
-            for (int i = 0; i < unencrypted1Chars.Count; i++)
+            for (int i = 0; i < unencrypted1.Length; i++)
             {
-                if (i < possibleKeyChars.Count)
+                if (i < possibleKey.Length)
                     continue;
-                int charIndex = (validCharacters.IndexOf(encrypted1[i]) - validCharacters.IndexOf(unencrypted1Chars[i]) + 27) % 27;
+                int charIndex = (validCharacters.IndexOf(encrypted1[i]) - validCharacters.IndexOf(unencrypted1[i]) + 27) % 27;
 
-                possibleKeyChars.Add(validCharacters[charIndex]);
+                possibleKey += validCharacters[charIndex];
             }
-            string possibleKey = string.Concat(possibleKeyChars);
 
-            string unencrypted2 = Decoder(encrypted2, possibleKey);
-            if (word == "curiosity")
-                Console.WriteLine($"'{word}': '{possibleKey}'; '{unencrypted2}'");
+            unencrypted2 = Decoder(encrypted2, possibleKey);
+            string[] unencrypted2Substring = unencrypted2.Split(' ');
+            List<string> matches = new List<string>();
 
-            List<string> possibleMatches = PossibleMatchingWords(unencrypted2);
-            unencrypted2Chars.Clear();
+            int keyLength = Math.Max(encrypted1.Length, encrypted2.Length);
 
-            if (possibleMatches.Count == 0)
-                continue;
-            else if (unencrypted1Chars.Count < encrypted1.Length || unencrypted2Chars.Count < encrypted2.Length)
+            if (unencrypted2Substring.Length == 1)
             {
-                Console.WriteLine("calling recursive");
-                KeyFinderRecursive(encrypted2, encrypted1, unencrypted2Chars, unencrypted1Chars, possibleKeyChars, possibleMatches);
+                matches = PossibleMatchingWords(unencrypted2);
+                if (matches.Count == 0)
+                    continue;
+                else if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                    possibleKeys.Add(possibleKey);
+                else
+                    KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
             }
-            else
-                possibleKeys.Add(possibleKey);
+            else if (unencrypted2Substring.Length > 1 && unencrypted2Substring[^1] == string.Empty)
+            {
+                bool onlyValidWords = true;
+                for(int i = 0; i < unencrypted2Substring.Length - 1; i++)
+                {
+                    if (!words.Contains(unencrypted2Substring[i]))
+                        onlyValidWords = false;
+                }
+                if (onlyValidWords)
+                {
+                    if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                        possibleKeys.Add(possibleKey);
+                    else
+                        KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
+                }
+                else
+                    continue;
+            }
+            else if (unencrypted2Substring.Length > 1 && unencrypted2Substring[^1] != string.Empty)
+            {
+                matches = PossibleMatchingWords(unencrypted2Substring[^1]);
+                bool onlyValidWords = matches.Count > 0;
+                for (int i = 0; i < unencrypted2Substring.Length - 1; i++)
+                {
+                    if (!words.Contains(unencrypted2Substring[i]))
+                        onlyValidWords = false;
+                }
+                if (onlyValidWords)
+                {
+                    if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                        possibleKeys.Add(possibleKey);
+                    else
+                        KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
+                }
+                else
+                    continue;
+            }
         }
         return possibleKeys;
     }
 
-    void KeyFinderRecursive(string encrypted1, string encrypted2, List<char> unencrypted1Chars, List<char> unencrypted2Chars, List<char> possibleKeyChars, List<string> matchingWords)
+    void KeyFinderRecursive(string encrypt1, string encrypt2, string unencrypt1, string unencrypt2, string Key, List<string> matchingWords)
     {
-        foreach (string word in matchingWords)
+        string encrypted1 = encrypt1;
+        string encrypted2 = encrypt2;
+        string unencrypted1 = unencrypt1;
+        string unencrypted2 = unencrypt2;
+        string possibleKey = Key;
+        List<string> words = matchingWords;
+
+        foreach (string word in words)
         {
-            int initialLength = unencrypted1Chars.Count;
-            int unencrypted2Length = unencrypted2Chars.Count;
-
-            if (word.Length > encrypted1.Length)
+            if ((word.Length + unencrypted1.Length) > encrypted1.Length)
                 continue;
-            else if (word.Length < encrypted1.Length)
-                unencrypted1Chars.AddRange(word + " ");
-            else if (word.Length == encrypted1.Length)
-                unencrypted1Chars.AddRange(word);
+            else if ((word.Length + unencrypted1.Length) < encrypted1.Length)
+                unencrypted1 += word + " ";
+            else if ((word.Length + unencrypted1.Length) == encrypted1.Length)
+                unencrypted1 += word;
 
-            for (int i = 0; i < unencrypted1Chars.Count; i++)
+            for (int i = 0; i < unencrypted1.Length; i++)
             {
-                if (i < possibleKeyChars.Count)
+                if (i < possibleKey.Length)
                     continue;
-                int charIndex = (validCharacters.IndexOf(encrypted1[i]) - validCharacters.IndexOf(unencrypted1Chars[i]) + 27) % 27;
+                int charIndex = (validCharacters.IndexOf(encrypted1[i]) - validCharacters.IndexOf(unencrypted1[i]) + 27) % 27;
 
-                possibleKeyChars.Add(validCharacters[charIndex]);
+                possibleKey += validCharacters[charIndex];
             }
-            string possibleKey = string.Concat(possibleKeyChars);
+            unencrypted2 = Decoder(encrypted2, possibleKey);
 
-            string unencrypted2 = Decoder(encrypted2, possibleKey);
+            string[] unencrypted2Substring = unencrypted2.Split(' ');
+            List<string> matches = new List<string>();
 
+            int keyLength = Math.Max(encrypted1.Length, encrypted2.Length);
 
-            List<string> possibleMatches = PossibleMatchingWords(unencrypted2.Substring(unencrypted2Length, unencrypted2Chars.Count - unencrypted2Length));
-            if (possibleMatches.Count == 0)
+            if (unencrypted2Substring.Length == 1)
             {
-                unencrypted1Chars.RemoveAll(c => unencrypted1Chars.IndexOf(c) >= initialLength);
-                continue;
+                matches = PossibleMatchingWords(unencrypted2);
+                if (matches.Count == 0)
+                    continue;
+                else if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                    possibleKeys.Add(possibleKey);
+                else
+                    KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
             }
-            else if (unencrypted1Chars.Count < encrypted1.Length || unencrypted2Chars.Count < encrypted2.Length)
-                KeyFinderRecursive(encrypted2, encrypted1, unencrypted2Chars, unencrypted1Chars, possibleKeyChars, possibleMatches);
-            else
-                possibleKeys.Add(possibleKey);
+            else if (unencrypted2Substring.Length > 1 && unencrypted2Substring[^1] == string.Empty)
+            {
+                bool onlyValidWords = true;
+                for (int i = 0; i < unencrypted2Substring.Length - 1; i++)
+                {
+                    if (!words.Contains(unencrypted2Substring[i]))
+                        onlyValidWords = false;
+                }
+                if (onlyValidWords)
+                {
+                    if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                        possibleKeys.Add(possibleKey);
+                    else 
+                        KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
+                }
+                else
+                    continue;
+                
+            }
+            else if (unencrypted2Substring.Length > 1 && unencrypted2Substring[^1] != string.Empty)
+            {
+                matches = PossibleMatchingWords(unencrypted2Substring[^1]);
+                bool onlyValidWords = matches.Count > 0;
+                for (int i = 0; i < unencrypted2Substring.Length - 1; i++)
+                {
+                    if (!words.Contains(unencrypted2Substring[i]))
+                        onlyValidWords = false;
+                }
+
+                if (onlyValidWords)
+                {
+                    if (unencrypted1.Length == encrypted1.Length && unencrypted2.Length == encrypted2.Length && possibleKey.Length == keyLength)
+                        possibleKeys.Add(possibleKey);
+                    else 
+                        KeyFinderRecursive(encrypted2, encrypted1, unencrypted2, unencrypted1, possibleKey, matches);
+                }
+                else
+                    continue;
+            }
         }
     }
 
-    List<string> PossibleMatchingWords(string wordFragment)
+    public List<string> PossibleMatchingWords(string wordFragment)
     {
         List<string> possibleMatches = new List<string>();
 
@@ -181,7 +266,7 @@ public class Encrypt
                     match = true;
             }
             if (match is true)
-                possibleMatches.Add(word);
+                possibleMatches.Add(word.Substring(wordFragment.Length));
         }
         return possibleMatches;
     }
