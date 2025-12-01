@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Encoded_Message/1.0.0": {
+        "runtime": {
+          "Encoded_Message.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Encoded_Message/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
